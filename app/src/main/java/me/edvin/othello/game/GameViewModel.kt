@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import me.edvin.othello.game.grid.Grid
 import me.edvin.othello.game.grid.square.Square
+import me.edvin.othello.game.player.Player
 
 class GameViewModel: ViewModel() {
 	val grid = Grid()
@@ -50,11 +51,10 @@ class GameViewModel: ViewModel() {
 				square.value = player
 			}
 			grid.getSquare(x, y)?.value = player
+			round++
 
 			if (getPossiblePlacements().isEmpty()) {
 				state = GameState.END
-			} else {
-				round++
 			}
 		}
 	}
@@ -68,6 +68,19 @@ class GameViewModel: ViewModel() {
 			}
 		}
 		return possible
+	}
+
+	fun getWinner(): Player? {
+		val black = grid.getSquareCount(Player.BLACK.value)
+		val white = grid.getSquareCount(Player.WHITE.value)
+
+		if (black > white) {
+			return Player.BLACK
+		} else if (white > black) {
+			return Player.WHITE
+		} else {
+			return null
+		}
 	}
 
 	fun canPlace(x: Int, y: Int): Boolean {

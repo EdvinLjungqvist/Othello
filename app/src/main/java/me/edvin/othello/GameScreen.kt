@@ -1,30 +1,41 @@
 package me.edvin.othello
 
-import android.icu.text.IDNA.Info
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.material3.Button
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import me.edvin.othello.game.GameState
 import me.edvin.othello.game.GameViewModel
+import me.edvin.othello.game.player.Player
 import kotlin.math.pow
 
 @Composable
@@ -40,14 +51,59 @@ fun GameScreen(viewModel: GameViewModel = remember { GameViewModel() }) {
 
 @Composable
 fun Menu(viewModel: GameViewModel) {
-	Button(
-		modifier = Modifier
-			.fillMaxWidth(),
-		onClick = {viewModel.state = GameState.PLAY}
+	var dimension by remember { mutableFloatStateOf(8f) } // Default dimension is 8
+	Column(
+		modifier = Modifier.fillMaxSize(),
+		horizontalAlignment = Alignment.CenterHorizontally,
+		verticalArrangement = Arrangement.Center
 	) {
-		Text(text = "Click to start!")
+		Text(
+			text = "Othello Game",
+			style = TextStyle(
+				fontWeight = FontWeight.Bold,
+				fontSize = 40.sp,
+				color = Color.Black
+			),
+			modifier = Modifier.padding(bottom = 16.dp)
+		)
+		Button(
+			modifier = Modifier
+				.fillMaxWidth(0.6f)
+				.padding(bottom = 16.dp),
+			onClick = { viewModel.state = GameState.PLAY }
+		) {
+			Text(text = "Click to start!")
+		}
+		Row(
+			modifier = Modifier.fillMaxWidth(),
+			horizontalArrangement = Arrangement.Center,
+			verticalAlignment = Alignment.CenterVertically
+		) {
+			Column {
+				Slider(
+					value = dimension,
+					onValueChange = { dimension = it },
+					steps = 2,
+					valueRange = 4f..10f,
+					modifier = Modifier
+						.width(200.dp)
+						.align(Alignment.CenterHorizontally),
+				)
+				Text(
+					text = "Board Size: ${dimension.toInt()}x${dimension.toInt()}",
+					modifier = Modifier.fillMaxWidth(),
+					style = TextStyle(
+						fontSize = 18.sp,
+						textAlign = TextAlign.Center,
+						color = Color.Black
+					)
+				)
+			}
+		}
 	}
 }
+
+
 
 @Composable
 fun Game(viewModel: GameViewModel) {
@@ -86,12 +142,16 @@ fun Game(viewModel: GameViewModel) {
 		Row(
 			modifier = Modifier.fillMaxWidth()
 		) {
-			val state = viewModel.state
+			Column(
+				modifier = Modifier.fillMaxWidth()
+			){
+				val state = viewModel.state
 
-			if (state === GameState.PLAY) {
-				Info(viewModel = viewModel)
-			} else {
-				Result(viewModel = viewModel)
+				if (state === GameState.PLAY) {
+					Info(viewModel = viewModel)
+				} else {
+					Result(viewModel = viewModel)
+				}
 			}
 		}
 	}
@@ -99,17 +159,19 @@ fun Game(viewModel: GameViewModel) {
 
 @Composable
 fun Square(index: Int, viewModel: GameViewModel) {
-	val x = index % viewModel.grid.dimension
-	val y = index / viewModel.grid.dimension
-	val value = viewModel.grid.getSquare(x, y)?.value
+	val grid = viewModel.grid
+	val dimension = grid.dimension
+	val x = index % dimension
+	val y = index / dimension
+	val value = grid.getSquare(x, y)?.value
 
 	var color = Color.Transparent
 
 	if (value == -1 && viewModel.canPlace(x, y)) {
 		color = Color(12, 190, 102, 255)
-	} else if (value == 0) {
+	} else if (value == Player.BLACK.value) {
 		color = Color(5, 5, 5)
-	} else if (value == 1) {
+	} else if (value == Player.WHITE.value) {
 		color = Color(250, 250, 250)
 	}
 
@@ -134,10 +196,20 @@ fun Square(index: Int, viewModel: GameViewModel) {
 
 @Composable
 fun Info(viewModel: GameViewModel) {
-	Text(text = "Game info...")
+	val grid = viewModel.grid
+
+	Text(text = "Round: ${viewModel.round}")
+	Text(text = "Black: ${grid.getSquareCount(Player.BLACK.value)}")
+	Text(text = "White: ${grid.getSquareCount(Player.WHITE.value)}")
 }
 
 @Composable
 fun Result(viewModel: GameViewModel) {
-	Text(text = "Game results...")
+	val winner = viewModel.getWinner()
+	
+	if (winner != null) {
+		Text(text = "${winner.text} has won!")
+	} else {
+		Text(text = "Draw!")
+	}
 }
