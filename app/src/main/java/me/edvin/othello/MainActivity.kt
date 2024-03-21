@@ -7,7 +7,6 @@ import me.edvin.othello.ui.theme.OthelloTheme
 
 // TODO:
 // - Use themes
-// - States (Start, Game, Settings ...)
 // - Handle screen rotations
 
 class MainActivity : ComponentActivity() {

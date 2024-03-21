@@ -1,16 +1,18 @@
 package me.edvin.othello.game
 
+import android.widget.Toast
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import me.edvin.othello.game.grid.Grid
 import me.edvin.othello.game.grid.square.Square
 import me.edvin.othello.game.player.Player
 
 class GameViewModel: ViewModel() {
-	val grid = Grid()
+	var grid: Grid? = null
 	var state by mutableStateOf(GameState.START)
 	var round by mutableIntStateOf(0)
 
@@ -22,10 +24,10 @@ class GameViewModel: ViewModel() {
 				if (dx != 0 || dy != 0) {
 					val ray = ArrayList<Square>()
 
-					for (l in 1 .. grid.dimension) {
+					for (l in 1 ..grid?.dimension!!) {
 						val nx = x + dx * l
 						val ny = y + dy * l
-						val square = grid.getSquare(nx, ny)
+						val square = grid?.getSquare(nx, ny)
 						val value = square?.value
 
 						if (value != getOpponent()) {
@@ -42,7 +44,7 @@ class GameViewModel: ViewModel() {
 		return changes
 	}
 
-	fun place(x: Int, y: Int) {
+	fun place(x: Int, y: Int): Boolean {
 		if (canPlace(x, y)) {
 			val player = getPlayer()
 			val changes = getPlacementChanges(x, y, player)
@@ -50,19 +52,21 @@ class GameViewModel: ViewModel() {
 			for (square in changes) {
 				square.value = player
 			}
-			grid.getSquare(x, y)?.value = player
+			grid?.getSquare(x, y)?.value = player
 			round++
 
 			if (getPossiblePlacements().isEmpty()) {
 				state = GameState.END
 			}
+			return true
 		}
+		return false
 	}
 
 	private fun getPossiblePlacements(): List<Square> {
 		val possible = ArrayList<Square>()
 
-		for (square in grid.squares) {
+		for (square in grid?.squares!!) {
 			if (canPlace(square.x, square.y)) {
 				possible.add(square)
 			}
@@ -71,20 +75,23 @@ class GameViewModel: ViewModel() {
 	}
 
 	fun getWinner(): Player? {
-		val black = grid.getSquareCount(Player.BLACK.value)
-		val white = grid.getSquareCount(Player.WHITE.value)
+		val black = grid?.getSquareCount(Player.BLACK.value)
+		val white = grid?.getSquareCount(Player.WHITE.value)
 
-		if (black > white) {
-			return Player.BLACK
-		} else if (white > black) {
-			return Player.WHITE
-		} else {
-			return null
+		if (white != null && black != null) {
+			return if (black > white) {
+				Player.BLACK
+			} else if (white > black) {
+				Player.WHITE
+			} else {
+				null
+			}
 		}
+		return null;
 	}
 
 	fun canPlace(x: Int, y: Int): Boolean {
-		return grid.getSquare(x, y)?.value == -1 && getPlacementChanges(x, y, getPlayer()).isNotEmpty()
+		return grid?.getSquare(x, y)?.value == -1 && getPlacementChanges(x, y, getPlayer()).isNotEmpty()
 	}
 
 	private fun getPlayer(): Int {

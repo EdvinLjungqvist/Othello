@@ -2,8 +2,7 @@ package me.edvin.othello.game.grid
 
 import me.edvin.othello.game.grid.square.Square
 
-class Grid {
-	val dimension = 4
+class Grid (val dimension: Int) {
 	val squares = ArrayList<Square>()
 
 	init {

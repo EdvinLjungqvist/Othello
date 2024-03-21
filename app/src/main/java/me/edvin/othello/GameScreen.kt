@@ -1,5 +1,6 @@
 package me.edvin.othello
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -35,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.edvin.othello.game.GameState
 import me.edvin.othello.game.GameViewModel
+import me.edvin.othello.game.grid.Grid
 import me.edvin.othello.game.player.Player
 import kotlin.math.pow
 
@@ -70,7 +73,10 @@ fun Menu(viewModel: GameViewModel) {
 			modifier = Modifier
 				.fillMaxWidth(0.6f)
 				.padding(bottom = 16.dp),
-			onClick = { viewModel.state = GameState.PLAY }
+			onClick = {
+				viewModel.grid = Grid(dimension.toInt());
+				viewModel.state = GameState.PLAY
+			}
 		) {
 			Text(text = "Click to start!")
 		}
@@ -107,7 +113,7 @@ fun Menu(viewModel: GameViewModel) {
 
 @Composable
 fun Game(viewModel: GameViewModel) {
-	val dimension = viewModel.grid.dimension
+	val dimension = viewModel.grid?.dimension
 
 	Column(
 		modifier = Modifier.fillMaxSize()
@@ -120,7 +126,7 @@ fun Game(viewModel: GameViewModel) {
 			LazyVerticalGrid(
 				modifier = Modifier
 					.fillMaxSize(),
-				columns = GridCells.Fixed(count = dimension)
+				columns = GridCells.Fixed(count = dimension!!)
 
 			) {
 				items(count = dimension.toDouble().pow(2.0).toInt()) { index ->
@@ -160,9 +166,10 @@ fun Game(viewModel: GameViewModel) {
 @Composable
 fun Square(index: Int, viewModel: GameViewModel) {
 	val grid = viewModel.grid
-	val dimension = grid.dimension
-	val x = index % dimension
+	val dimension = grid?.dimension
+	val x = index % dimension!!
 	val y = index / dimension
+
 	val value = grid.getSquare(x, y)?.value
 
 	var color = Color.Transparent
@@ -175,13 +182,17 @@ fun Square(index: Int, viewModel: GameViewModel) {
 		color = Color(250, 250, 250)
 	}
 
+	val context = LocalContext.current
+
 	IconButton(
 		modifier = Modifier
 			.fillMaxSize()
 			.padding(2.dp),
 		colors = IconButtonDefaults.iconButtonColors(color),
 		onClick = {
-			viewModel.place(x, y)
+			if (!viewModel.place(x, y)) {
+				Toast.makeText(context, "Invalid square, try again!", Toast.LENGTH_SHORT).show()
+			}
 		}
 	) {
 		Box(
@@ -199,8 +210,19 @@ fun Info(viewModel: GameViewModel) {
 	val grid = viewModel.grid
 
 	Text(text = "Round: ${viewModel.round}")
-	Text(text = "Black: ${grid.getSquareCount(Player.BLACK.value)}")
-	Text(text = "White: ${grid.getSquareCount(Player.WHITE.value)}")
+	Text(text = "Black: ${grid?.getSquareCount(Player.BLACK.value)}")
+	Text(text = "White: ${grid?.getSquareCount(Player.WHITE.value)}")
+
+	Button(
+		modifier = Modifier
+			.fillMaxWidth(0.6f)
+			.padding(bottom = 16.dp),
+		onClick = {
+
+		}
+	) {
+		Text(text = "Restart")
+	}
 }
 
 @Composable
