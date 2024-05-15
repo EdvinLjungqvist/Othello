@@ -1,104 +1,107 @@
 package me.edvin.othello.game
 
-import android.widget.Toast
+import android.content.Context
+import android.media.MediaPlayer
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import me.edvin.othello.game.grid.Grid
 import me.edvin.othello.game.grid.square.Square
-import me.edvin.othello.game.player.Player
+import me.edvin.othello.game.grid.square.SquareColor
 
 class GameViewModel: ViewModel() {
-	var grid: Grid? = null
-	var state by mutableStateOf(GameState.START)
-	var round by mutableIntStateOf(0)
+    var grid: Grid? = null
+    var round: Int = 0
+    var state by mutableStateOf(GameState.START)
+        private set
+    var player by mutableStateOf(SquareColor.BLACK)
+        private set
+    var dimension = 8
+    var sounds = true
 
-	private fun getPlacementChanges(x: Int, y: Int, player: Int): ArrayList<Square> {
-		val changes = ArrayList<Square>()
+    fun playSound(context: Context, id: Int) {
+        val mediaPlayer: MediaPlayer = MediaPlayer.create(context, id)
 
-		for (dx in -1 .. 1) {
-			for (dy in -1 .. 1) {
-				if (dx != 0 || dy != 0) {
-					val ray = ArrayList<Square>()
+        mediaPlayer.start()
+    }
 
-					for (l in 1 ..grid?.dimension!!) {
-						val nx = x + dx * l
-						val ny = y + dy * l
-						val square = grid?.getSquare(nx, ny)
-						val value = square?.value
+    fun start() {
+        state = GameState.PLAY
+        grid = Grid(dimension)
+    }
 
-						if (value != getOpponent()) {
-							if (value == player) {
-								changes.addAll(ray)
-							}
-							break
-						}
-						ray.add(square)
-					}
-				}
-			}
-		}
-		return changes
-	}
+    fun end() {
+        state = GameState.END
+    }
 
-	fun place(x: Int, y: Int): Boolean {
-		if (canPlace(x, y)) {
-			val player = getPlayer()
-			val changes = getPlacementChanges(x, y, player)
+    fun reset() {
+        state = GameState.START
+        player = SquareColor.BLACK
+        round = 0
+    }
 
-			for (square in changes) {
-				square.value = player
-			}
-			grid?.getSquare(x, y)?.value = player
-			round++
+    fun place(x: Int, y: Int) {
+        val changes = getPlacementChanges(x, y)
 
-			if (getPossiblePlacements().isEmpty()) {
-				state = GameState.END
-			}
-			return true
-		}
-		return false
-	}
+        changes.forEach { it.color = player }
+        grid?.getSquare(x, y)?.color = player
+        player = getOpponent()
+        round++
+    }
 
-	private fun getPossiblePlacements(): List<Square> {
-		val possible = ArrayList<Square>()
+    fun getWinner(): SquareColor? {
+        val black = grid?.getSquareCount(SquareColor.BLACK)
+        val white = grid?.getSquareCount(SquareColor.WHITE)
 
-		for (square in grid?.squares!!) {
-			if (canPlace(square.x, square.y)) {
-				possible.add(square)
-			}
-		}
-		return possible
-	}
+        return when {
+            white != null && black != null -> {
+                if (black > white) SquareColor.BLACK
+                else if (white > black) SquareColor.WHITE
+                else null
+            }
+            else -> null
+        }
+    }
 
-	fun getWinner(): Player? {
-		val black = grid?.getSquareCount(Player.BLACK.value)
-		val white = grid?.getSquareCount(Player.WHITE.value)
+    fun shouldEnd(): Boolean {
+        return grid?.squares?.all { !canPlace(it.x, it.y) } ?: false
+    }
 
-		if (white != null && black != null) {
-			return if (black > white) {
-				Player.BLACK
-			} else if (white > black) {
-				Player.WHITE
-			} else {
-				null
-			}
-		}
-		return null;
-	}
+    fun canPlace(x: Int, y: Int): Boolean {
+        return grid?.getSquare(x, y)?.color == SquareColor.UNSET && getPlacementChanges(x, y).isNotEmpty()
+    }
 
-	fun canPlace(x: Int, y: Int): Boolean {
-		return grid?.getSquare(x, y)?.value == -1 && getPlacementChanges(x, y, getPlayer()).isNotEmpty()
-	}
+    fun getOpponent(): SquareColor {
+        return if (player == SquareColor.BLACK) SquareColor.WHITE
+        else SquareColor.BLACK
+    }
 
-	private fun getPlayer(): Int {
-		return round % 2
-	}
+    private fun getPlacementChanges(x: Int, y: Int): ArrayList<Square> {
+        val changes = ArrayList<Square>()
 
-	private fun getOpponent(): Int {
-		return (round + 1) % 2
-	}
+        for (dx in -1 .. 1) {
+            for (dy in -1 .. 1) {
+                if (dx != 0 || dy != 0) {
+                    val ray = ArrayList<Square>()
+
+                    for (l in 1 ..grid?.dimension!!) {
+                        val nx = x + dx * l
+                        val ny = y + dy * l
+                        val square = grid?.getSquare(nx, ny)
+                        val color = square?.color
+
+                        if (color != getOpponent()) {
+                            if (color == player) {
+                                changes.addAll(ray)
+                            }
+                            break
+                        }
+                        ray.add(square)
+                    }
+                }
+            }
+        }
+        return changes
+    }
 }
