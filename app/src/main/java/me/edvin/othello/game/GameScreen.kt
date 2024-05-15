@@ -144,12 +144,12 @@ fun Menu(viewModel: GameViewModel) {
                     text = "${dimension}x${dimension}",
                     fontSize = 16.sp,
                     color = Color.White,
-                    modifier = Modifier.padding(top = 8.dp) // Added top padding
+                    modifier = Modifier.padding(top = 8.dp)
                 )
 
                 Text(
                     text = "Sound Effects",
-                    fontSize = 24.sp, // Increased font size
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.White,
                     modifier = Modifier.padding(vertical = 20.dp)
