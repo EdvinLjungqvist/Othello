@@ -148,14 +148,14 @@ fun Square(viewModel: GameViewModel, x: Int, y: Int) {
     var description: Int = -1
 
     if (canPlace && squareColor == SquareColor.UNSET) {
-        image = R.drawable.disc_hint
-        description = R.string.disc_hint_description
+        image = R.drawable.disk_hint
+        description = R.string.disk_hint_description
     } else if (squareColor == SquareColor.BLACK) {
-        image = R.drawable.disc_black
-        description = R.string.disc_black_description
+        image = R.drawable.disk_black
+        description = R.string.disk_black_description
     } else if (squareColor == SquareColor.WHITE) {
-        image = R.drawable.disc_white
-        description = R.string.disc_white_description
+        image = R.drawable.disk_white
+        description = R.string.disk_white_description
     }
 
     IconButton(
@@ -184,7 +184,7 @@ fun Square(viewModel: GameViewModel, x: Int, y: Int) {
         if (image != -1 || description != -1) {
             Image(
                 painter = painterResource(image),
-                contentDescription = stringResource(R.string.disc_black_description)
+                contentDescription = stringResource(description)
             )
         }
     }

@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">Othello</string>
-    <string name="disc_black_description">Black disc</string>
-    <string name="disc_white_description">White disc</string>
-    <string name="disc_hint_description">Hint disc</string>
+    <string name="disk_black_description">Black disk</string>
+    <string name="disk_white_description">White disk</string>
+    <string name="disk_hint_description">Hint disk</string>
 </resources>
