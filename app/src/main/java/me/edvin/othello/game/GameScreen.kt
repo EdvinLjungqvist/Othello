@@ -1,319 +1,176 @@
 package me.edvin.othello.game
 
-import android.media.MediaPlayer
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.edvin.othello.R
 import me.edvin.othello.game.grid.square.SquareColor
-import kotlin.math.pow
+import me.edvin.othello.ui.theme.OthelloBackground
+import me.edvin.othello.ui.theme.OthelloContainer
+import me.edvin.othello.ui.theme.OthelloGridBackground
+import me.edvin.othello.ui.theme.OthelloGridBorder
 
 @Composable
-fun GameScreen(viewModel: GameViewModel = remember { GameViewModel() }) {
+fun GameScreen(viewModel: GameViewModel) {
     val state = viewModel.state
 
-    if (state == GameState.START) {
-        Menu(viewModel = viewModel)
-    } else {
-        Game(viewModel = viewModel)
+    Column(
+        modifier = Modifier.padding(10.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp)
+    ) {
+        if (state == GameState.START) {
+            Menu(viewModel)
+        } else {
+            Game(viewModel)
+        }
     }
 }
 
 @Composable
 fun Menu(viewModel: GameViewModel) {
-    var dimension by remember { mutableIntStateOf(viewModel.dimension) }
+    var dimension by remember { mutableIntStateOf((viewModel.dimension)) }
     var sounds by remember { mutableStateOf(viewModel.sounds) }
 
-    Column(
-        modifier = Modifier
-            .background(color = Color(0, 158, 88))
-            .fillMaxSize()
-            .padding(all = 12.dp)
-            .verticalScroll(rememberScrollState()),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Container(
+        clickable = {
+            viewModel.start(dimension, sounds)
+        }
     ) {
-        Row(
-            modifier = Modifier.padding(vertical = 12.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .clickable {
-                        viewModel.dimension = dimension
-                        viewModel.sounds = sounds
-                        viewModel.start()
-                    }
-                    .fillMaxWidth()
-                    .background(
-                        color = Color(0, 179, 98),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(20.dp)
-                ,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Othello Game",
-                    textAlign = TextAlign.Center,
-                    fontSize = 36.sp,
-                    fontWeight = FontWeight.ExtraBold,
-                    color = Color.White,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 12.dp)
-                )
-                Text(
-                    text = "Click To Start!",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.padding(vertical = 12.dp)
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier.padding(vertical = 12.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color(0, 179, 98),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(20.dp)
-                ,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Board Size",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.padding(vertical = 12.dp)
-                )
-
-                Slider(
-                    value = dimension.toFloat(),
-                    onValueChange = { dimension = it.toInt() },
-                    steps = 2,
-                    valueRange = 4f..10f,
-                    colors = SliderDefaults.colors(
-                        thumbColor = Color.White,
-                        activeTrackColor = Color(20, 199, 128),
-                        inactiveTrackColor = Color(0, 158, 88)
-                    ) ,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
-
-                Text(
-                    text = "${dimension}x${dimension}",
-                    fontSize = 16.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-
-                Text(
-                    text = "Sound Effects",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.padding(vertical = 20.dp)
-                )
-
-                Switch(
-                    checked = sounds,
-                    onCheckedChange = {
-                        sounds = it
-                    }
-                )
-            }
-        }
-
-        Row(
-            modifier = Modifier.padding(vertical = 12.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        color = Color(0, 179, 98),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(20.dp)
-                ,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Game Info",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.padding(bottom = 20.dp)
-                )
-
-                Text(
-                    text = "Othello is a strategy board game played by two players who take turns placing their discs on a grid. The objective is to have the most discs of your color on the board by flipping your opponent's discs to your color through strategic placement.",
-                    fontSize = 16.sp,
-                    color = Color.White
-                )
-            }
-        }
+        ContainerTitle("Othello Game")
+        ContainerText("Click here to start!")
+    }
+    Container {
+        ContainerTitle("Board Size ${dimension}x${dimension}")
+        Slider(
+            value = dimension.toFloat(),
+            onValueChange = { dimension = it.toInt() },
+            steps = 2,
+            valueRange = 4f..10f,
+            colors = SliderDefaults.colors(
+                thumbColor = Color.White,
+                activeTrackColor = Color.LightGray,
+                inactiveTrackColor = OthelloBackground
+            ),
+        )
+        ContainerTitle("Sound Effects ${if (sounds) "ON" else "OFF"}")
+        Switch(
+            checked = sounds,
+            onCheckedChange = { sounds = it },
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = Color.LightGray,
+                uncheckedTrackColor = OthelloBackground
+            )
+        )
+    }
+    Container {
+        ContainerTitle("How To Play")
+        ContainerText("Othello is a strategy board game played by two players who take turns placing their discs on a grid. The objective is to have the most discs of your color on the board by flipping your opponent's discs to your color through strategic placement.")
     }
 }
 
 @Composable
 fun Game(viewModel: GameViewModel) {
+    Grid(viewModel)
+    Container {
+        val state = viewModel.state
+
+        if (state == GameState.END){
+            Result(viewModel)
+        }
+        Info(viewModel)
+    }
+    Container(
+        clickable = {
+            viewModel.reset()
+        }
+    ) {
+        ContainerTitle("Menu")
+        ContainerText("Click to return to menu!")
+    }
+}
+
+@Composable
+fun Grid(viewModel: GameViewModel) {
     val dimension = viewModel.grid?.dimension!!
 
-    Column(
+    LazyVerticalGrid(
         modifier = Modifier
-            .verticalScroll(rememberScrollState())
-            .fillMaxSize()
-            .background(color = Color(0, 158, 88))
+            .background(OthelloGridBackground)
+            .aspectRatio(1f),
+        verticalArrangement = Arrangement.Top,
+        columns = GridCells.Fixed(dimension)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f)
-        ) {
-            LazyVerticalGrid(
-                modifier = Modifier.fillMaxSize(),
-                columns = GridCells.Fixed(count = dimension)
-
-            ) {
-                items(count = dimension.toDouble().pow(2).toInt()) { index ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .aspectRatio(1f)
-                            .border(1.dp, Color(0, 179, 98), shape = RectangleShape)
-                            .background(
-                                color = Color(0, 158, 88)
-                            ),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Square(index = index, viewModel = viewModel)
-                    }
-                }
-            }
-        }
-
-        Row(
-            modifier = Modifier.padding(all = 12.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        color = Color(0, 179, 98),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(20.dp)
-                ,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                val state = viewModel.state
-
-                if (state == GameState.PLAY) {
-                    Info(viewModel = viewModel)
-                } else {
-                    Result(viewModel = viewModel)
-                }
-            }
-        }
-
-        Row(
-            modifier = Modifier
-                .padding(all = 12.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .clickable { viewModel.reset() }
-                    .fillMaxWidth()
-                    .background(
-                        color = Color(0, 179, 98),
-                        shape = RoundedCornerShape(16.dp)
-                    )
-                    .padding(20.dp)
-                ,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "Return To Menu!",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White,
-                    modifier = Modifier.padding(vertical = 12.dp)
-                )
+        for (y in 0 until dimension) {
+            for (x in 0 until dimension) {
+                item { Square(viewModel, x, y) }
             }
         }
     }
 }
 
 @Composable
-fun Square(index: Int, viewModel: GameViewModel) {
-    val grid = viewModel.grid
-    val dimension = grid?.dimension!!
-    val x = index % dimension
-    val y = index / dimension
-    val squareColor = grid.getSquare(x, y)?.color
-    var color = Color.Transparent
-
+fun Square(viewModel: GameViewModel, x: Int, y: Int) {
     val context = LocalContext.current
+    val canPlace = viewModel.canPlace(x, y)
+    val squareColor = viewModel.grid?.getSquare(x, y)?.color
+    var image: Int = -1
+    var description: Int = -1
 
-    if (squareColor == SquareColor.UNSET && viewModel.canPlace(x, y)) {
-        color = Color(12, 190, 102, 255)
+    if (canPlace && squareColor == SquareColor.UNSET) {
+        image = R.drawable.disc_hint
+        description = R.string.disc_hint_description
     } else if (squareColor == SquareColor.BLACK) {
-        color = Color(5, 5, 5)
+        image = R.drawable.disc_black
+        description = R.string.disc_black_description
     } else if (squareColor == SquareColor.WHITE) {
-        color = Color(250, 250, 250)
+        image = R.drawable.disc_white
+        description = R.string.disc_white_description
     }
 
     IconButton(
         modifier = Modifier
-            .fillMaxSize()
-            .padding(2.dp),
-        colors = IconButtonDefaults.iconButtonColors(color),
+            .aspectRatio(1f)
+            .border(1.dp, OthelloGridBorder, shape = RectangleShape)
+            .padding(3.dp),
         onClick = {
-            if (viewModel.canPlace(x, y)) {
-                viewModel.place(x, y)
-
+            if (canPlace) {
                 val sounds = viewModel.sounds
+
+                viewModel.place(x, y)
 
                 if (viewModel.shouldEnd()) {
                     viewModel.end()
@@ -327,76 +184,82 @@ fun Square(index: Int, viewModel: GameViewModel) {
             }
         }
     ) {
-        Box(
-            modifier = Modifier
-                .aspectRatio(1f)
-                .background(color = color)
-        ) {
-
+        if (image != -1 || description != -1) {
+            Image(
+                painter = painterResource(image),
+                contentDescription = stringResource(R.string.disc_black_description)
+            )
         }
     }
 }
 
+
 @Composable
 fun Info(viewModel: GameViewModel) {
-    val grid = viewModel.grid
-
-    Text(
-        text = "Round: ${viewModel.round}",
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.White,
-        modifier = Modifier.padding(vertical = 12.dp)
-    )
-
-    Text(
-        text = "Player: ${viewModel.player.text}",
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.White,
-        modifier = Modifier.padding(vertical = 12.dp)
-    )
-
-    Text(
-        text = "Black Count: ${grid?.getSquareCount(SquareColor.BLACK)}",
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.White,
-        modifier = Modifier.padding(vertical = 12.dp)
-    )
-
-    Text(
-        text = "White Count: ${grid?.getSquareCount(SquareColor.WHITE)}",
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold,
-        color = Color.White,
-        modifier = Modifier.padding(vertical = 12.dp)
-    )
+    ContainerText("Round: ${viewModel.round}")
+    ContainerText("Player: ${viewModel.player.text}")
+    ContainerText("Black Discs: ${viewModel.grid?.getSquareCount(SquareColor.BLACK)}")
+    ContainerText("White Discs: ${viewModel.grid?.getSquareCount(SquareColor.WHITE)}")
 }
 
 @Composable
 fun Result(viewModel: GameViewModel) {
     val winner = viewModel.getWinner()
-    val grid = viewModel.grid
 
-
-    if (winner !== null) {
-        Text(
-            text = "The winner is ${winner.text}! (${grid?.getSquareCount(SquareColor.BLACK)}/${grid?.getSquareCount(SquareColor.WHITE)})",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(vertical = 12.dp)
-        )
+    if (winner != null) {
+        ContainerTitle("The winner is ${winner.text}!")
     } else {
-        val count = grid?.getSquareCount(SquareColor.BLACK)
-
-        Text(
-            text = "Draw (${count}/${count})",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(vertical = 12.dp)
-        )
+        ContainerTitle("Draw!")
     }
+}
+
+
+@Composable
+fun Container(
+    clickable: (() -> Unit)? = null,
+    content: @Composable () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = OthelloContainer,
+                shape = RoundedCornerShape(15.dp)
+            )
+            .padding(20.dp)
+            .let {
+                if (clickable != null) {
+                    it.clickable(onClick = clickable)
+                } else {
+                    it
+                }
+            },
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        content()
+    }
+}
+
+@Composable
+fun ContainerTitle(
+    text: String
+) {
+    Text(
+        text = text,
+        fontSize = 25.sp,
+        fontWeight = FontWeight.Bold,
+        color = Color.White
+    )
+}
+
+@Composable
+fun ContainerText(
+    text: String
+) {
+    Text(
+        text = text,
+        fontSize = 16.sp,
+        color = Color.White
+    )
 }

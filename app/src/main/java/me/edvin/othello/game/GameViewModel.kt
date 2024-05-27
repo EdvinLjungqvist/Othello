@@ -2,8 +2,8 @@ package me.edvin.othello.game
 
 import android.content.Context
 import android.media.MediaPlayer
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import me.edvin.othello.game.grid.Grid
@@ -12,23 +12,23 @@ import me.edvin.othello.game.grid.square.SquareColor
 
 class GameViewModel: ViewModel() {
     var grid: Grid? = null
+        private set
     var round: Int = 0
+        private set
     var state by mutableStateOf(GameState.START)
         private set
     var player by mutableStateOf(SquareColor.BLACK)
         private set
     var dimension = 8
+        private set
     var sounds = true
+        private set
 
-    fun playSound(context: Context, id: Int) {
-        val mediaPlayer: MediaPlayer = MediaPlayer.create(context, id)
-
-        mediaPlayer.start()
-    }
-
-    fun start() {
-        state = GameState.PLAY
+    fun start(dimension: Int, sounds: Boolean) {
+        this.dimension = dimension
+        this.sounds = sounds
         grid = Grid(dimension)
+        state = GameState.PLAY
     }
 
     fun end() {
@@ -36,9 +36,9 @@ class GameViewModel: ViewModel() {
     }
 
     fun reset() {
-        state = GameState.START
         player = SquareColor.BLACK
         round = 0
+        state = GameState.START
     }
 
     fun place(x: Int, y: Int) {
@@ -72,7 +72,13 @@ class GameViewModel: ViewModel() {
         return grid?.getSquare(x, y)?.color == SquareColor.UNSET && getPlacementChanges(x, y).isNotEmpty()
     }
 
-    fun getOpponent(): SquareColor {
+    fun playSound(context: Context, id: Int) {
+        val mediaPlayer: MediaPlayer = MediaPlayer.create(context, id)
+
+        mediaPlayer.start()
+    }
+
+    private fun getOpponent(): SquareColor {
         return if (player == SquareColor.BLACK) SquareColor.WHITE
         else SquareColor.BLACK
     }
