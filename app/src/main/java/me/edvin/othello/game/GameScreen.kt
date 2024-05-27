@@ -95,7 +95,7 @@ fun Menu(viewModel: GameViewModel) {
     }
     Container {
         ContainerTitle("How To Play")
-        ContainerText("Othello is a strategy board game played by two players who take turns placing their discs on a grid. The objective is to have the most discs of your color on the board by flipping your opponent's discs to your color through strategic placement.")
+        ContainerText("Othello is a strategy board game played by two players who take turns placing their disks on a grid. The objective is to have the most disks of your color on the board by flipping your opponent's disks to your color through strategic placement.")
     }
 }
 
@@ -116,7 +116,7 @@ fun Game(viewModel: GameViewModel) {
         }
     ) {
         ContainerTitle("Menu")
-        ContainerText("Click to return to menu!")
+        ContainerText("Click here to return to menu!")
     }
 }
 
@@ -195,8 +195,8 @@ fun Square(viewModel: GameViewModel, x: Int, y: Int) {
 fun Info(viewModel: GameViewModel) {
     ContainerText("Round: ${viewModel.round}")
     ContainerText("Player: ${viewModel.player.text}")
-    ContainerText("Black Discs: ${viewModel.grid?.getSquareCount(SquareColor.BLACK)}")
-    ContainerText("White Discs: ${viewModel.grid?.getSquareCount(SquareColor.WHITE)}")
+    ContainerText("Black Disks: ${viewModel.grid?.getSquareCount(SquareColor.BLACK)}")
+    ContainerText("White Disks: ${viewModel.grid?.getSquareCount(SquareColor.WHITE)}")
 }
 
 @Composable
