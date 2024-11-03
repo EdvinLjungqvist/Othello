@@ -2,8 +2,8 @@ package me.edvin.othello.game
 
 import android.content.Context
 import android.media.MediaPlayer
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import me.edvin.othello.game.grid.Grid
@@ -23,10 +23,13 @@ class GameViewModel: ViewModel() {
         private set
     var sounds = true
         private set
+    var ai = false
+        private set
 
-    fun start(dimension: Int, sounds: Boolean) {
+    fun start(dimension: Int, sounds: Boolean, ai: Boolean) {
         this.dimension = dimension
         this.sounds = sounds
+        this.ai = ai
         grid = Grid(dimension)
         state = GameState.PLAY
     }
@@ -48,6 +51,14 @@ class GameViewModel: ViewModel() {
         grid?.getSquare(x, y)?.color = player
         player = getOpponent()
         round++
+    }
+
+    fun placeAI() {
+        val possibleSquares = grid?.squares?.filter { canPlace(it.x, it.y) }.orEmpty()
+
+        possibleSquares.maxByOrNull { getPlacementChanges(it.x, it.y).size }?.let { bestSquare ->
+            place(bestSquare.x, bestSquare.y)
+        }
     }
 
     fun getWinner(): SquareColor? {

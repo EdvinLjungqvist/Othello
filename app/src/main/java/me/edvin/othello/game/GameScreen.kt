@@ -2,7 +2,6 @@ package me.edvin.othello.game
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -19,15 +18,14 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -61,10 +59,11 @@ fun GameScreen(viewModel: GameViewModel) {
 fun Menu(viewModel: GameViewModel) {
     var dimension by remember { mutableIntStateOf((viewModel.dimension)) }
     var sounds by remember { mutableStateOf(viewModel.sounds) }
+    var ai by remember { mutableStateOf(viewModel.ai) }
 
     Container(
         clickable = {
-            viewModel.start(dimension, sounds)
+            viewModel.start(dimension, sounds, ai)
         }
     ) {
         ContainerTitle("Othello Game")
@@ -92,6 +91,15 @@ fun Menu(viewModel: GameViewModel) {
                 uncheckedTrackColor = OthelloBackground
             )
         )
+        ContainerTitle("AI Opponent ${if (ai) "ON" else "OFF"}")
+        Switch(
+            checked = ai,
+            onCheckedChange = { ai = it },
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = Color.LightGray,
+                uncheckedTrackColor = OthelloBackground
+            )
+        )
     }
     Container {
         ContainerTitle("How To Play")
@@ -102,22 +110,8 @@ fun Menu(viewModel: GameViewModel) {
 @Composable
 fun Game(viewModel: GameViewModel) {
     Grid(viewModel)
-    Container {
-        val state = viewModel.state
-
-        if (state == GameState.END){
-            Result(viewModel)
-        }
-        Info(viewModel)
-    }
-    Container(
-        clickable = {
-            viewModel.reset()
-        }
-    ) {
-        ContainerTitle("Menu")
-        ContainerText("Click here to return to menu!")
-    }
+    Info(viewModel)
+    Return(viewModel)
 }
 
 @Composable
@@ -126,10 +120,12 @@ fun Grid(viewModel: GameViewModel) {
 
     LazyVerticalGrid(
         modifier = Modifier
-            .background(OthelloGridBackground)
+            .background(OthelloGridBorder)
             .aspectRatio(1f),
-        verticalArrangement = Arrangement.Top,
-        columns = GridCells.Fixed(dimension)
+        verticalArrangement = Arrangement.spacedBy(2.dp),
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+        columns = GridCells.Fixed(dimension),
+        userScrollEnabled = false,
     ) {
         for (y in 0 until dimension) {
             for (x in 0 until dimension) {
@@ -161,21 +157,25 @@ fun Square(viewModel: GameViewModel, x: Int, y: Int) {
     IconButton(
         modifier = Modifier
             .aspectRatio(1f)
-            .border(1.dp, OthelloGridBorder, shape = RectangleShape)
+            .background(OthelloGridBackground)
             .padding(3.dp),
         onClick = {
-            if (canPlace) {
+            if (viewModel.canPlace(x, y)) {
                 val sounds = viewModel.sounds
 
                 viewModel.place(x, y)
 
+                if (viewModel.ai && viewModel.player == SquareColor.WHITE) {
+                    viewModel.placeAI()
+                }
                 if (viewModel.shouldEnd()) {
                     viewModel.end()
 
                     if (sounds) {
                         viewModel.playSound(context, R.raw.end)
                     }
-                } else if (sounds) {
+                }
+                if (sounds) {
                     viewModel.playSound(context, R.raw.place)
                 }
             }
@@ -193,23 +193,35 @@ fun Square(viewModel: GameViewModel, x: Int, y: Int) {
 
 @Composable
 fun Info(viewModel: GameViewModel) {
-    ContainerText("Round: ${viewModel.round}")
-    ContainerText("Player: ${viewModel.player.text}")
-    ContainerText("Black Disks: ${viewModel.grid?.getSquareCount(SquareColor.BLACK)}")
-    ContainerText("White Disks: ${viewModel.grid?.getSquareCount(SquareColor.WHITE)}")
-}
+    Container {
+        if (viewModel.state != GameState.END) {
+            ContainerTitle("${viewModel.player.text}'s turn")
+        } else {
+            val winner = viewModel.getWinner()
 
-@Composable
-fun Result(viewModel: GameViewModel) {
-    val winner = viewModel.getWinner()
-
-    if (winner != null) {
-        ContainerTitle("The winner is ${winner.text}!")
-    } else {
-        ContainerTitle("Draw!")
+            if (winner != null) {
+                ContainerTitle("${winner.text} won!")
+            } else {
+                ContainerTitle("Draw!")
+            }
+        }
+        ContainerText("Round: ${viewModel.round}")
+        ContainerText("Black Disks: ${viewModel.grid?.getSquareCount(SquareColor.BLACK)}")
+        ContainerText("White Disks: ${viewModel.grid?.getSquareCount(SquareColor.WHITE)}")
     }
 }
 
+@Composable
+fun Return(viewModel: GameViewModel) {
+    Container(
+        clickable = {
+            viewModel.reset()
+        }
+    ) {
+        ContainerTitle("Menu")
+        ContainerText("Click here to return to menu!")
+    }
+}
 
 @Composable
 fun Container(
@@ -256,7 +268,7 @@ fun ContainerText(
 ) {
     Text(
         text = text,
-        fontSize = 16.sp,
-        color = Color.White
+        fontSize = 18.sp,
+        color = Color.LightGray
     )
 }
